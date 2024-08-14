@@ -1,0 +1,6 @@
+BIN_FILE: java
+BIN_PATH: ''
+DANGER_WORDS:
+- import java.net
+MEM_FACTOR: 1.0
+TIME_FACTOR: 1.5

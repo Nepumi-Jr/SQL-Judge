@@ -1,0 +1,8 @@
+'-': Wrong Answer
+'?': Undefined
+H: Partially correct
+P: Accept
+S: Skip
+T: Time-Limit Exceed
+X: Runtime Error
+E: Syntax Error

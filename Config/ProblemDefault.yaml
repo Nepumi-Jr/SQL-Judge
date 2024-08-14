@@ -1,0 +1,20 @@
+compareCompile:
+- 'echo "Hello World"'
+- ''
+compareRun:
+- 'echo "Hello World"'
+- ''
+compiling:
+  Sql:
+  - 'echo "Hello World"'
+  - ''
+judgingCompile:
+- <<!Python:BIN_FILE>>
+- -m py_compile "/Users/peerapholsudputong/nepumiStuff/ALotCode/grader/sqlGrader/Garedami/StandardJudge/StdJudge.py"
+judgingRun:
+- <<!Python:BIN_FILE>>
+- '"/Users/peerapholsudputong/nepumiStuff/ALotCode/grader/sqlGrader/Garedami/StandardJudge/StdJudge.py"'
+running:
+  Sql:
+  - 'echo "Hello World"'
+  - ''

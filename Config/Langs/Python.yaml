@@ -1,0 +1,9 @@
+BIN_FILE: python
+BIN_PATH: ''
+DANGER_WORDS:
+- import os
+- from os
+- import subprocess
+- from subprocess
+MEM_FACTOR: 1.0
+TIME_FACTOR: 5.0
