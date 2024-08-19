@@ -15,9 +15,18 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     #DON'T TOUCH THIS
     global show_log
 
-    cursor.execute(f"USE {user_db}")
+    #test solution sql
+    cursor.execute(f"USE {solution_db}")
     cursor.execute(solution_sql)
-    solution_result = cursor.fetchall()
+    _ = cursor.fetchall()
+
+    #test user sql
+    try:
+        cursor.execute(f"USE {user_db}")
+        cursor.execute(solution_sql)
+        solution_result = cursor.fetchall()
+    except Exception as e:
+        return ResultDto("X", 0, 1, 0, str(e))
 
     cursor.execute(f"USE {user_db}")
     

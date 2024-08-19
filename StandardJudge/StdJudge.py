@@ -13,7 +13,7 @@
     output will return by stdout in formatting below
     {verdict};{score};{maxscore};{elapsed};{memory};{comment}
 """
-from os import path
+from os import path, remove
 import sys
 
 import SQLExecute
@@ -53,7 +53,7 @@ if(len(judgeArgs) < 6):
 
 srcPath = judgeArgs[4] or ""
 solPath = path.join(PROBLEM_DIR,"solution.sql")
-resultPath = path.join(PROBLEM_DIR,"result.txt")
+resultPath = path.join(PROBLEM_DIR,"result")
 
 
 
@@ -65,24 +65,26 @@ def main():
             SQLExecute.generateResultReport(solPath,srcPath, resultPath)
         except Exception as e:
             print(f"!;0;1;0;0;{e}",end = "")
-            return
+            exit(1)
     
-    if not path.exists(resultPath):
-        print(f"!;0;1;0;0;Result not found",end = "")
+    curResultPath = f"{resultPath}_{testCase-1}"
+
+    if not path.exists(curResultPath):
+        if testCase == 1:
+            exit(1)
+        else:
+            print("E;0;0;0;0;End of Test",end = "")
         return
 
-    with open(resultPath,"r") as f:
-        results = f.read().strip().split("\n")
-    
-    if len(results) == 0:
-        print(f"!;0;1;0;0;Result is empty",end = "")
-        return
-
-
-    if testCase > len(results):
-        print("E;0;0;0;0;End of Test",end = "")
-        return
-    
-    print(results[testCase-1],end = "")
+    with open(curResultPath,"r") as f:
+        result = f.read().strip()
+        
+    print(result,end = "")
+    if result[0] == "!":
+        exit(1)
+    try:
+        remove(curResultPath)
+    except:
+        pass
 
 main()

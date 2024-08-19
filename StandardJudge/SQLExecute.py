@@ -95,9 +95,9 @@ def generateResultReport(solution_sql_path:str, user_sql_path:str, result_path:s
             break
         results.append(result.to_string_result())
 
-    with open(result_path, 'w') as file:
-        for line in results:
-            file.write(line + '\n')
+    for case, result  in enumerate(results):
+        with open(f"{result_path}_{case}", 'w') as file:
+                file.write(result)
 
     my_cursor.execute(f"DROP DATABASE {solution_db}")
     my_cursor.execute(f"DROP DATABASE {user_db}")

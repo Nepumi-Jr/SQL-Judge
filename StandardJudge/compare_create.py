@@ -142,7 +142,7 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     
     if isPass:
         if len(warning_msgs) > 0:
-            result = ResultDto("P", 1, 1, elapsed * 1000, "Correct with warning...\n" + "\n".join(warning_msgs))
+            result = ResultDto("%", 1, 1, elapsed * 1000, "Correct with warning...\n" + "\n".join(warning_msgs))
         else:
             result = ResultDto("P", 1, 1, elapsed * 1000, "Correct result")
     else:
