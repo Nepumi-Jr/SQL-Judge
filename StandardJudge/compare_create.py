@@ -51,7 +51,7 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     log("S>>", solution_sql)
     log("U>>", user_sql)
 
-    operatorWords = ["CREATE", "TABLE", "IF", "NOT", "EXISTS"] # words that are not table name
+    operatorWords = ["CREATE", "TABLE", "IF", "NOT", "EXISTS", "VIEW"] # words that are not table name
 
     cursor.execute(f"USE {solution_db}")
     cursor.execute(solution_sql)
