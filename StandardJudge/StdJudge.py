@@ -52,6 +52,9 @@ if(len(judgeArgs) < 6):
 
 
 srcPath = judgeArgs[4] or ""
+prerequisitePath = None
+if path.exists(path.join(PROBLEM_DIR,"prerequisite.sql")):
+    prerequisitePath = path.join(PROBLEM_DIR,"prerequisite.sql")
 solPath = path.join(PROBLEM_DIR,"solution.sql")
 resultPath = path.join(PROBLEM_DIR,"result")
 
@@ -62,7 +65,7 @@ def main():
 
     if testCase == 1:
         try:
-            SQLExecute.generateResultReport(solPath,srcPath, resultPath)
+            SQLExecute.generateResultReport(prerequisitePath,solPath,srcPath, resultPath)
         except Exception as e:
             print(f"!;0;1;0;0;{e}",end = "")
             exit(1)

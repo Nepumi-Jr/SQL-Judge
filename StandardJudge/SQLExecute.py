@@ -1,3 +1,4 @@
+from typing import Union
 import mysql.connector
 import time
 from random import randint
@@ -79,6 +80,7 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
         adminCursor.execute(f"CREATE DATABASE {db_name};")
         return db_name
 
+    prerequisite_sql_s =  read_sql_file(prerequisite_sql_path) if prerequisite_sql_path != None else []
     solution_sql_s = read_sql_file(solution_sql_path)
     user_sql_s = read_sql_file(user_sql_path)
 
@@ -92,6 +94,25 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
 
     with mysql.connector.connect(**grader_config_connection) as grader_connection:
         with grader_connection.cursor() as grader_cursor:
+            
+            log("Prepare DB...")
+            log(prerequisite_sql_s)
+            is_prepared = True
+            for i, sql in enumerate(prerequisite_sql_s):
+                try:
+                    grader_cursor.execute(f"USE {solution_db}")
+                    grader_cursor.execute(sql)
+                    grader_cursor.execute(f"USE {user_db}")
+                    grader_cursor.execute(sql)
+                except Exception as pre_e:
+                    is_prepared = False
+                    log("ded ", pre_e)
+                    results.append(f"!;0;1;0;0;{pre_e}")
+                    break
+            
+            log("is prepared", is_prepared)
+
+            if is_prepared:
 
                 for i, solution_sql in enumerate(solution_sql_s):
                     if i >= len(user_sql_s):
