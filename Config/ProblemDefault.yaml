@@ -10,10 +10,10 @@ compiling:
   - ''
 judgingCompile:
 - <<!Python:BIN_FILE>>
-- -m py_compile "/Users/peerapholsudputong/nepumiStuff/ALotCode/grader/sqlGrader/Garedami/StandardJudge/StdJudge.py"
+- -m py_compile "<<Std_Judge>>"
 judgingRun:
 - <<!Python:BIN_FILE>>
-- '"/Users/peerapholsudputong/nepumiStuff/ALotCode/grader/sqlGrader/Garedami/StandardJudge/StdJudge.py"'
+- '"<<Std_Judge>>"'
 running:
   Sql:
   - 'echo "Hello World"'
