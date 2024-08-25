@@ -160,6 +160,8 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
 
                 for i, solution_sql in enumerate(solution_sql_s):
                     is_no_score = problem_sql_tags[i].is_no_score
+                    is_ignore_error = problem_sql_tags[i].is_ignore_error
+
                     def append_result(result:str):
                         if not is_no_score:
                             results.append(result)
@@ -177,23 +179,40 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
                     
                     try:
                         if solution_command == "SELECT":
-                            result = select_compare(grader_cursor, solution_sql, user_sql_s[i], solution_db, user_db, show_log)
+                            result = select_compare(grader_cursor, solution_sql, user_sql_s[i], solution_db, user_db, problem_sql_tags[i])
                         elif solution_command == "CREATE":
-                            result = create_compare(grader_cursor, solution_sql, user_sql_s[i], solution_db, user_db, show_log)
+                            result = create_compare(grader_cursor, solution_sql, user_sql_s[i], solution_db, user_db, problem_sql_tags[i])
                         else:   # didn't compare the result yet
-                            grader_cursor.execute(f"USE {solution_db}")
-                            grader_cursor.execute(solution_sql)
-                            
-                            grader_cursor.execute(f"USE {user_db}")
 
+                            is_solution_error = False
+
+                            grader_cursor.execute(f"USE {solution_db}")
+                            if is_ignore_error:
+                                try:
+                                    grader_cursor.execute(solution_sql)
+                                except:
+                                    is_solution_error = True
+                                    pass
+                            else:
+                                grader_cursor.execute(solution_sql)
+                            
+
+                            grader_cursor.execute(f"USE {user_db}")
                             start_time = time.time()
                             try:
                                 grader_cursor.execute(user_sql_s[i])
-                            except Exception as e:
-                                result = ResultDto("X", 0, 1, 0, str(e))
+                            except:
+                                if is_ignore_error and is_solution_error:
+                                    result = ResultDto("P", 1, 1, 0, "Correct with ignore Error")
+                                else:
+                                    result = ResultDto("X", 0, 1, 0, str(e))
                             else:
                                 elapsed = int((time.time() - start_time) * 1000)
-                                result = ResultDto("P", 1, 1, elapsed, "Correct result")
+
+                                if is_ignore_error and is_solution_error:
+                                    result = ResultDto("-", 0, 1, elapsed, "This is not an error")
+                                else:
+                                    result = ResultDto("P", 1, 1, elapsed, "Correct result")
                     except Exception as e:
                         append_result(f"!;0;1;0;0;{e}")
                         break

@@ -1,4 +1,4 @@
-from dto import ResultDto
+from dto import ResultDto, SqlSolutionTagDto
 from time import time
 
 
@@ -12,8 +12,16 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
 
     #test solution sql
     cursor.execute(f"USE {solution_db}")
-    cursor.execute(solution_sql)
-    _ = cursor.fetchall()
+    if solution_tag.is_ignore_error:
+        try:
+            cursor.execute(solution_sql)
+            cursor.fetchall()
+        except:
+            is_solution_error = True
+            pass
+    else:
+        cursor.execute(solution_sql)
+        cursor.fetchall()
 
     #test user sql
     try:
@@ -21,7 +29,10 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
         cursor.execute(solution_sql)
         solution_result = cursor.fetchall()
     except Exception as e:
-        return ResultDto("X", 0, 1, 0, str(e))
+        if solution_tag.is_ignore_error:
+            is_solution_error = is_solution_error and True
+        else:
+            return ResultDto("X", 0, 1, 0, str(e))
 
     cursor.execute(f"USE {user_db}")
     
@@ -29,10 +40,14 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     try:
         cursor.execute(user_sql)
     except Exception as e:
-        result = ResultDto("X", 0, 1, 0, str(e))
+        if solution_tag.is_ignore_error and is_solution_error:
+            return ResultDto("P", 1, 1, 0, "Correct with ignore Error")
+        return ResultDto("X", 0, 1, 0, str(e))
     user_result = cursor.fetchall()
     elapsed = time() - start_time
 
+    if solution_tag.is_ignore_error and is_solution_error:
+        return ResultDto("-", 0, 1, elapsed * 1000, "This is not an error")
     
     if solution_result == user_result:
         result = ResultDto("P", 1, 1, elapsed * 1000, "Correct result")

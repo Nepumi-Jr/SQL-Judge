@@ -1,4 +1,4 @@
-from dto import ResultDto
+from dto import ResultDto, SqlSolutionTagDto
 from time import time
 import file_logger
 
@@ -50,15 +50,27 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     operatorWords = ["CREATE", "TABLE", "IF", "NOT", "EXISTS", "VIEW"] # words that are not table name
 
     cursor.execute(f"USE {solution_db}")
-    cursor.execute(solution_sql)
-    for word in solution_sql.split():
-        if word.upper() not in operatorWords:
-            table_name = word
-            break
-    if table_name == "" or table_name == None:
-        raise Exception("Table name is not found in solution")
-    cursor.execute(f"DESCRIBE {table_name}")
-    solution_result = cursor.fetchall()
+    is_solution_error = False
+    if solution_tag.is_ignore_error:
+        try:
+            cursor.execute(solution_sql)
+        except:
+            is_solution_error = True
+            pass
+    else:
+        cursor.execute(solution_sql)
+    
+    if not is_solution_error:
+        for word in solution_sql.split():
+            if word.upper() not in operatorWords:
+                table_name = word
+                break
+        if table_name == "" or table_name == None:
+            raise Exception("Table name is not found in solution")
+        cursor.execute(f"DESCRIBE {table_name}")
+        solution_result = cursor.fetchall()
+    else:
+        table_name = "YAHALLOOOOO"
 
 
     cursor.execute(f"USE {user_db}")
@@ -67,7 +79,13 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     try:
         cursor.execute(user_sql)
     except Exception as e:
-        return ResultDto("X", 0, 1, 0, str(e))
+        if solution_tag.is_ignore_error and is_solution_error:
+            return ResultDto("P", 1, 1, 0, "Correct with ignore Error")
+        else:
+            return ResultDto("X", 0, 1, 0, str(e))
+    
+    if solution_tag.is_ignore_error and is_solution_error:
+        return ResultDto("-", 0, 1, 0, "This is not an error")
     
     try: #TODO : Is this necessary?
         cursor.execute(f"DESCRIBE {table_name}")
