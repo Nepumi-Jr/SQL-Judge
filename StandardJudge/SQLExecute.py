@@ -159,15 +159,20 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
             if is_prepared:
 
                 for i, solution_sql in enumerate(solution_sql_s):
+                    is_no_score = problem_sql_tags[i].is_no_score
+                    def append_result(result:str):
+                        if not is_no_score:
+                            results.append(result)
+
                     if i >= len(user_sql_s):
-                        results.append("X;0;1;0;0;User didn't finish the task")
+                        append_result("X;0;1;0;0;User didn't finish the task")
                         continue
 
                     solution_command = solution_sql.split()[0].upper().strip()
                     user_command = user_sql_s[i].split()[0].upper().strip()
                     log("Execute","cmd", solution_command, user_command)
                     if solution_command != user_command:
-                        results.append("-;0;1;0;0;Different command")
+                        append_result("-;0;1;0;0;Different command")
                         continue
                     
                     try:
@@ -190,9 +195,9 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
                                 elapsed = int((time.time() - start_time) * 1000)
                                 result = ResultDto("P", 1, 1, elapsed, "Correct result")
                     except Exception as e:
-                        results.append(f"!;0;1;0;0;{e}")
+                        append_result(f"!;0;1;0;0;{e}")
                         break
-                    results.append(result.to_string_result())
+                    append_result(result.to_string_result())
 
     log("Execute","Results", results)
     for case, result  in enumerate(results):
