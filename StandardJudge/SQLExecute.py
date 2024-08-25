@@ -73,9 +73,14 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
         adminCursor.execute(f"CREATE DATABASE {db_name};")
         return db_name
 
-    prerequisite_sql_s =  read_sql_file(prerequisite_sql_path) if prerequisite_sql_path != None else []
-    solution_sql_s = read_sql_file(solution_sql_path)
-    user_sql_s = read_sql_file(user_sql_path)
+    def drop_db(adminCursor, db_name):
+        try_drop = 0
+        while try_drop < 10:
+            adminCursor.execute("SHOW DATABASES")
+            if db_name in adminCursor:
+                adminCursor.execute(f"DROP DATABASE {db_name}")
+            else:
+                break
 
     with mysql.connector.connect(**admin_config_connection) as admin_connection:
         with admin_connection.cursor() as admin_cursor:
@@ -147,8 +152,8 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
     log("Execute","Drop DB...")
     with mysql.connector.connect(**admin_config_connection) as admin_connection:
         with admin_connection.cursor() as admin_cursor:
-            admin_cursor.execute(f"DROP DATABASE {solution_db}")
-            admin_cursor.execute(f"DROP DATABASE {user_db}")
+            drop_db(admin_cursor, solution_db)
+            drop_db(admin_cursor, user_db)
 
     log("Execute","Done")
 
