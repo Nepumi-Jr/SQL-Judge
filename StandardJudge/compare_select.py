@@ -1,19 +1,14 @@
 from dto import ResultDto
 from time import time
 
-show_log = False
-def log(*content, **kwargs):
-    if show_log:
-        print(*content, **kwargs)
 
-def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str, is_log:bool) -> ResultDto:
+def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str, solution_tag: SqlSolutionTagDto) -> ResultDto:
     # Selection will select the result from the user's database
     # first execute the solution sql in the user database
     # then execute the user sql in the user database
     # compare the result
 
-    #DON'T TOUCH THIS
-    global show_log
+    is_solution_error = False
 
     #test solution sql
     cursor.execute(f"USE {solution_db}")

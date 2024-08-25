@@ -5,15 +5,10 @@ from random import randint
 import sqlparse
 import configparser
 
-from dto import ResultDto
+from file_logger import log
 from compare_create import compare as create_compare
 from compare_select import compare as select_compare
 
-show_log = False
-
-def log(*content, **kwargs):
-    if show_log:
-        print(*content, **kwargs)
 
 try:
     sql_config = configparser.ConfigParser()
@@ -34,7 +29,7 @@ try:
     }
 
 except Exception as e:
-    log("Can't read the config...\n", e)
+    log("Config","Can't read the config...\n", e)
 
     admin_config_connection = {
         "host": "localhost",
@@ -50,9 +45,7 @@ except Exception as e:
 
 
 
-def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_path:str, user_sql_path:str, result_path:str, this_show_log:bool = False):
-    global show_log
-    show_log = this_show_log
+def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_path:str, user_sql_path:str, result_path:str):
     results = []
 
     def read_sql_file(file_path):
@@ -89,16 +82,12 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
             solution_db = create_random_db(admin_cursor)
             user_db = create_random_db(admin_cursor)
 
-    log("Total",len(solution_sql_s), "Commands")
-    log("UTotal",len(user_sql_s), "Commands")
-
     with mysql.connector.connect(**grader_config_connection) as grader_connection:
         with grader_connection.cursor() as grader_cursor:
             
-            log("Prepare DB...")
-            log(prerequisite_sql_s)
             is_prepared = True
             for i, sql in enumerate(prerequisite_sql_s):
+                log("Execute","Prepare", sql)
                 try:
                     grader_cursor.execute(f"USE {solution_db}")
                     grader_cursor.execute(sql)
@@ -106,11 +95,11 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
                     grader_cursor.execute(sql)
                 except Exception as pre_e:
                     is_prepared = False
-                    log("ded ", pre_e)
+                    log("Execute","ded ", pre_e)
                     results.append(f"!;0;1;0;0;{pre_e}")
                     break
             
-            log("is prepared", is_prepared)
+            log("Execute","is prepared", is_prepared)
 
             if is_prepared:
 
@@ -121,7 +110,7 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
 
                     solution_command = solution_sql.split()[0].upper().strip()
                     user_command = user_sql_s[i].split()[0].upper().strip()
-                    log("cmd", solution_command, user_command)
+                    log("Execute","cmd", solution_command, user_command)
                     if solution_command != user_command:
                         results.append("-;0;1;0;0;Different command")
                         continue
@@ -150,18 +139,18 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
                         break
                     results.append(result.to_string_result())
 
-    log("Results", results)
+    log("Execute","Results", results)
     for case, result  in enumerate(results):
         with open(f"{result_path}_{case}", 'w') as file:
                 file.write(result)
             
-    log("Drop DB...")
+    log("Execute","Drop DB...")
     with mysql.connector.connect(**admin_config_connection) as admin_connection:
         with admin_connection.cursor() as admin_cursor:
             admin_cursor.execute(f"DROP DATABASE {solution_db}")
             admin_cursor.execute(f"DROP DATABASE {user_db}")
 
-    log("Done")
+    log("Execute","Done")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 from dto import ResultDto
 from time import time
+import file_logger
 
-show_log = False
+
 def log(*content, **kwargs):
-    if show_log:
-        print(*content, **kwargs)
+    file_logger.log("CREATE", *content, **kwargs)
 
 def compareType(sol:str, user:str):
     groupTypes = [ # for mysql
@@ -38,14 +38,10 @@ def is_empty(val):
     return False
 
 
-def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str, is_log:bool) -> ResultDto:
+def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str, solution_tag: SqlSolutionTagDto) -> ResultDto:
     # insert just insert for each sql and database
     # them compare the result
     #! note that foreign key can't detected yet...
-
-    #DON'T TOUCH THIS
-    global show_log
-    show_log = is_log
 
     log("DB??", solution_db, user_db)
     log("S>>", solution_sql)
