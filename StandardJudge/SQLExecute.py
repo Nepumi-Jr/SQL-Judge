@@ -4,8 +4,11 @@ import time
 from random import randint
 import sqlparse
 import configparser
+import re
+
 
 from file_logger import log
+from dto import ResultDto, SqlSolutionTagDto
 from compare_create import compare as create_compare
 from compare_select import compare as select_compare
 
@@ -48,18 +51,59 @@ except Exception as e:
 def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_path:str, user_sql_path:str, result_path:str):
     results = []
 
-    def read_sql_file(file_path):
+    def get_sql_solution_tag(sql_statement, sql_statement_with_comment:str) -> SqlSolutionTagDto:
+        is_no_score = False
+        is_ignore_error = False
+
+        if "@no_score" in sql_statement_with_comment and "@no_score" not in sql_statement:
+            is_no_score = True
+
+        if "@ignore_error" in sql_statement_with_comment and "@ignore_error" not in sql_statement:
+            is_ignore_error = True
+        
+        return SqlSolutionTagDto(is_no_score, is_ignore_error)
+
+    def read_sql_file(file_path) -> tuple[list[str], list[SqlSolutionTagDto]]:
         with open(file_path, 'r') as file:
 
             content = file.read()
-            statements = [sqlparse.format(s, strip_comments = True, strip_whitespace = True) for s in sqlparse.split(content) if s.strip() != ""]
-            statements = [s for s in statements if s.strip() != ""]
+            statements = [sqlparse.format(s, strip_comments = True, strip_whitespace = True).strip() for s in sqlparse.split(content) if s.strip() != "" and sqlparse.format(s, strip_comments = True, strip_whitespace = True).strip() != ""]
+            statements_with_comment = [s.strip() for s in sqlparse.split(content) if s.strip() != "" and sqlparse.format(s, strip_comments = True, strip_whitespace = True).strip() != ""]
+            
+            try:
+                with open("sql_grader_ignore_list.txt", 'r') as ignore_file:
+                    ignore_list_raw = ignore_file.read().split("\n")
+            except:
+                ignore_list_raw = []
+            
+            # reading ignore_list
+            ignore_list = []
+            for s in ignore_list_raw:
+                txt = s.strip()
+                if "--" in txt:
+                    txt = txt.split("--")[0].strip()
+                
+                if txt != "":
+                    ignore_list.append(txt)
+            
+            # filtering the statements
+            log("User SQL", file_path)
+            filtered_statements = []
+            problem_sql_tags = []
+            for s, sc in zip(statements, statements_with_comment):
+                is_ignore = False
+                for ignore in ignore_list:
+                    if re.search(ignore.replace("%", ".*"), s, re.IGNORECASE):
+                        is_ignore = True
+                        break
+                if not is_ignore:
+                    
+                    filtered_statements.append(s)
+                    problem_sql_tags.append(get_sql_solution_tag(s, sc))
+                    log(None, s)
+                    log(None, get_sql_solution_tag(s, sc))
 
-            # log("path", file_path)
-            # for s in statements:
-            #     log(">",s)
-
-            return statements
+            return filtered_statements, problem_sql_tags
 
     def create_random_db(adminCursor):
         while True:
@@ -81,6 +125,12 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
                 adminCursor.execute(f"DROP DATABASE {db_name}")
             else:
                 break
+
+
+    prerequisite_sql_s =  read_sql_file(prerequisite_sql_path)[0] if prerequisite_sql_path != None else []
+    solution_sql_s, problem_sql_tags = read_sql_file(solution_sql_path)
+    user_sql_s = read_sql_file(user_sql_path)[0]
+
 
     with mysql.connector.connect(**admin_config_connection) as admin_connection:
         with admin_connection.cursor() as admin_cursor:

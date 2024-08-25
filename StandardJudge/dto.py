@@ -15,3 +15,10 @@ class ResultDto:
     def __repr__(self):
         return self.__str__()
 
+class SqlSolutionTagDto:
+    def __init__(self, is_no_score: bool, is_ignore_error):
+        self.is_no_score = is_no_score
+        self.is_ignore_error = is_ignore_error
+    
+    def __str__(self):
+        return f"tag : score {self.is_no_score}; ignore {self.is_ignore_error}"
