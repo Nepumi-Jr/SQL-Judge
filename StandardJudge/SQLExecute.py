@@ -112,7 +112,8 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
             
             # check if the database already exists
             adminCursor.execute("SHOW DATABASES")
-            if db_name not in adminCursor:
+            dbs = list(map(lambda x: x[0], adminCursor.fetchall()))
+            if db_name not in dbs:
                 break
         adminCursor.execute(f"CREATE DATABASE {db_name};")
         return db_name
@@ -121,10 +122,13 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
         try_drop = 0
         while try_drop < 10:
             adminCursor.execute("SHOW DATABASES")
-            if db_name in adminCursor:
+            log("Drop DB", db_name, adminCursor)
+            dbs = list(map(lambda x: x[0], adminCursor.fetchall()))
+            if db_name in dbs:
                 adminCursor.execute(f"DROP DATABASE {db_name}")
             else:
                 break
+            try_drop += 1
 
 
     prerequisite_sql_s =  read_sql_file(prerequisite_sql_path)[0] if prerequisite_sql_path != None else []
