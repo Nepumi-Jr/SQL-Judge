@@ -99,67 +99,59 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     # log("user_result", user_result)
     # log()
 
-    if len(solution_result) != len(user_result):
-        return ResultDto("-", 0, 1, elapsed * 1000, "Different length of result")
 
     isPass = True
     warning_msgs = []
-    sorted_solution_result = sorted(solution_result)
-    sorted_user_result = sorted(user_result)
-    for i, sol_table_result in enumerate(sorted_solution_result):
-        user_table_result = sorted_user_result[i]
+    
+    solution_table_dict_data = {}
+    
 
-        log("Index ", i)
-        log("?? : info    ", "(name, type, null, key, default, extra)")
-        log("?? : Solution", sol_table_result)
-        log("?? : User    ", user_table_result)
+    for sol_table_result in solution_result:
+        solution_table_dict_data[sol_table_result[0]] = sol_table_result
+    
+
+    cur_score = 0
+    max_score = 0
+    penalty = 0
+
+    for user_table_result in user_result:
+
+        if user_table_result[0] not in solution_table_dict_data:
+            penalty += 2 # for each column
+            continue
         
-        # name
-        if sol_table_result[0] != user_table_result[0]:
-            isPass = False
-            log("Fail name")
-            break
+        cur_score += 1
+        max_score += 1
+
+        sol_table_result = solution_table_dict_data[user_table_result[0]]
         
         # type
-        if not compareType(sol_table_result[1], user_table_result[1]):
-            isPass = False
-            log("Fail type", sol_table_result[1], user_table_result[1])
-            break
+        if compareType(sol_table_result[1], user_table_result[1]):
+            cur_score += 1
+        max_score += 1
 
         # null
         if sol_table_result[2] != user_table_result[2]:
-            # isPass = False
-            # log("Fail null")
-            warning_msgs.append(f"Nullable value is different for {sol_table_result[0]}")
-            break
+            pass
 
         # key
         if sol_table_result[3] != user_table_result[3]:
-            # isPass = False
-            # log("Fail key", sol_table_result[3], user_table_result[3])
-            warning_msgs.append(f"Key value is different for {sol_table_result[0]}")
-            break
+            pass
 
         # default
         if not is_empty(sol_table_result[4]) and sol_table_result[4] != user_table_result[4]:
-            # isPass = False
-            # log("Fail default")
-            warning_msgs.append(f"Default assign value is different for {sol_table_result[0]}")
-            break
+            pass
 
         # extra
         if not is_empty(sol_table_result[5]) and sol_table_result[5] != user_table_result[5]:
-            # isPass = False
-            # log("Fail extra")
-            warning_msgs.append(f"Extra attribute value is different for {sol_table_result[0]}")
-            break
+            pass
     
-    if isPass:
-        if len(warning_msgs) > 0:
-            result = ResultDto("%", 1, 1, elapsed * 1000, "Correct with warning...\n" + "\n".join(warning_msgs))
-        else:
-            result = ResultDto("P", 1, 1, elapsed * 1000, "Correct result")
+    final_score = max(0, cur_score - penalty)
+    if final_score == max_score:
+        result = ResultDto("P", 1, 1, elapsed * 1000, "Correct result")
+    elif final_score / max_score >= 0.5:
+        result = ResultDto("%", final_score / max_score, 1, elapsed * 1000, f"Correct {cur_score} out of {max_score} (penalty: -{penalty})")
     else:
-        result = ResultDto("-", 0, 1, elapsed * 1000, "Wrong result")
+        result = ResultDto("-", 0, 1, elapsed * 1000, f"Rejected (Correct {cur_score} out of {max_score} penalty: -{penalty}")
 
     return result

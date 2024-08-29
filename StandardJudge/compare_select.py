@@ -80,6 +80,6 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     elif final_score / max_score >= 0.5:
         result = ResultDto("H", final_score / max_score, 1, elapsed * 1000, f"Correct {cur_score} out of {max_score} (penalty: -{penalty})")
     else:
-        result = ResultDto("-", 0, 1, elapsed * 1000, f"Wrong result (Correct {cur_score} out of {max_score} penalty: -{penalty}")
+        result = ResultDto("-", 0, 1, elapsed * 1000, f"Rejected (Correct {cur_score} out of {max_score} penalty: -{penalty}")
 
     return result
