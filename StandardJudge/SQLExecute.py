@@ -173,9 +173,11 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
                     if i >= len(user_sql_s):
                         append_result("X;0;1;0;0;User didn't finish the task")
                         continue
+                    
+                    alphaNumPattern = re.compile(r"[\W_]+")
 
-                    solution_command = solution_sql.split()[0].upper().strip()
-                    user_command = user_sql_s[i].split()[0].upper().strip()
+                    solution_command = alphaNumPattern.sub("", solution_sql.split()[0].upper())
+                    user_command =  alphaNumPattern.sub("", user_sql_s[i].split()[0].upper()) 
                     log("Execute","cmd", solution_command, user_command)
                     if solution_command != user_command:
                         append_result("-;0;1;0;0;Different command")
