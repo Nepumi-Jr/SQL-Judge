@@ -49,6 +49,12 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     if solution_tag.is_ignore_error and is_solution_error:
         return ResultDto("-", 0, 1, elapsed * 1000, "This is not an error")
     
+    is_order_ignore = "orderby" not in solution_sql.replace(" ", "").lower()
+
+    if is_order_ignore:
+        solution_result = sorted(solution_result)
+        user_result = sorted(user_result)
+
     # starting to compare the result
     cur_score, max_score = 0, 0
     penalty = 0
@@ -66,7 +72,7 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
                 cur_score += 1
             max_score += 1
 
-        penalty += len(user_result[i]) - len(v)
+        penalty += abs(len(user_result[i]) - len(v))
     
     if len(user_result) > len(solution_result):
         for i in range(len(solution_result), len(user_result)):
@@ -78,8 +84,8 @@ def compare(cursor, solution_sql:str, user_sql:str, solution_db:str, user_db:str
     if final_score == max_score:
         result = ResultDto("P", 1, 1, elapsed * 1000, "Correct result")
     elif final_score / max_score >= 0.5:
-        result = ResultDto("H", final_score / max_score, 1, elapsed * 1000, f"Correct {cur_score} out of {max_score} (penalty: -{penalty})")
+        result = ResultDto("H", final_score / max_score, 1, elapsed * 1000, f"Correct {cur_score} out of {max_score} (penalty: {penalty * -1})")
     else:
-        result = ResultDto("-", 0, 1, elapsed * 1000, f"Rejected (Correct {cur_score} out of {max_score} penalty: -{penalty}")
+        result = ResultDto("-", 0, 1, elapsed * 1000, f"Rejected (Correct {cur_score} out of {max_score} penalty: {penalty * -1})")
 
     return result
