@@ -207,7 +207,7 @@ def generateResultReport(prerequisite_sql_path:Union[str, None],solution_sql_pat
                             start_time = time.time()
                             try:
                                 grader_cursor.execute(user_sql_s[i])
-                            except:
+                            except Exception as e:
                                 if is_ignore_error and is_solution_error:
                                     result = ResultDto("P", 1, 1, 0, "Correct with ignore Error")
                                 else:
